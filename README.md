@@ -19,14 +19,25 @@ Evaluated with 50 rollouts, DDIM 20 steps, max 400 steps per episode.
 | **baseline** | small_cnn, obs_h=1, act_h=16 | **42%** | 2.14 |
 | temporal_obs | obs_h=2, concat fusion | 40% | 3.16 |
 
-### Rollout Videos
+### Training Curves
 
-| | Success | Failure |
-|---|---|---|
-| **baseline** | [▶ success.mp4](assets/baseline/success.mp4) | [▶ fail.mp4](assets/baseline/fail.mp4) |
-| **temporal_obs** | [▶ success.mp4](assets/temporal_obs/success.mp4) | [▶ fail.mp4](assets/temporal_obs/fail.mp4) |
+![Loss Curves](results/loss_curves.png)
 
-> Click to view — GitHub renders `.mp4` files inline when opened directly.
+### Rollout Demos
+
+**Baseline — Success / Failure**
+
+<p float="left">
+  <img src="results/baseline_success.gif" width="45%" />
+  <img src="results/baseline_fail.gif" width="45%" />
+</p>
+
+**Temporal Obs — Success / Failure**
+
+<p float="left">
+  <img src="results/temporal_obs_success.gif" width="45%" />
+  <img src="results/temporal_obs_fail.gif" width="45%" />
+</p>
 
 ---
 
