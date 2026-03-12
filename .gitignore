@@ -1,0 +1,28 @@
+# Checkpoints (too large)
+experiments/*/checkpoints/
+
+# Videos
+experiments/*/videos/
+
+# Data
+data/
+
+# Logs (TFEvents, optional — comment out if you want to keep)
+experiments/*/logs/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Misc
+*.DS_Store
+.env
+logs/

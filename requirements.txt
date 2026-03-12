@@ -1,0 +1,28 @@
+# Core
+torch>=2.1.0
+torchvision>=0.16.0
+numpy>=1.24.0
+scipy>=1.11.0
+
+# MuJoCo / Gymnasium
+gymnasium>=0.29.0
+gymnasium-robotics>=1.2.4
+mujoco>=3.0.0
+robosuite @ git+https://github.com/ARISE-Initiative/robosuite.git@v1.5.1
+
+# Data
+h5py>=3.9.0
+tqdm>=4.65.0
+
+# Training / logging
+tensorboard>=2.14.0
+omegaconf>=2.3.0
+
+# Video recording
+imageio>=2.31.0
+imageio-ffmpeg>=0.4.9
+opencv-python>=4.8.0
+
+# Utilities
+einops>=0.7.0
+rich>=13.5.0
