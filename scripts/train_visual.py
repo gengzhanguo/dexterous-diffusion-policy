@@ -9,13 +9,21 @@ Usage:
     # Train with default config
     python scripts/train_visual.py
 
-    # Custom overrides
+    # Single dataset override
     python scripts/train_visual.py \
         --data data/robomimic/lift_ph_84px.hdf5 \
         --img_size 64 \
         --encoder small_cnn \
         --epochs 100 \
         --batch_size 128
+
+    # Multi-dataset: merge can_ph + can_mh + can_mg
+    python scripts/train_visual.py \
+        --config configs/robomimic_can_small.yaml \
+        --data data/robomimic/can_ph_84px.hdf5 \
+              data/robomimic/can_mh_84px.hdf5 \
+              data/robomimic/can_mg_84px.hdf5 \
+        --tasks can can can
 
     # Unfreeze backbone (fine-tune ResNet too)
     python scripts/train_visual.py --unfreeze_encoder
@@ -31,6 +39,7 @@ import numpy as np
 from omegaconf import OmegaConf
 
 from dataset.robomimic_loader import load_robomimic_dataset
+from dataset.multi_dataset import load_multi_robomimic_dataset
 from diffusion.visual_ddpm import VisualDiffusionPolicy
 from training.trainer import Trainer
 
@@ -56,7 +65,13 @@ Examples:
 """,
     )
     p.add_argument("--config",    type=str, default="configs/robomimic_lift.yaml")
-    p.add_argument("--data",      type=str, default=None)
+    p.add_argument("--data",      type=str, default=None, nargs="+",
+                   help="Path(s) to HDF5 dataset file(s). Pass multiple paths to merge datasets.\n"
+                        "Example: --data can_ph.hdf5 can_mh.hdf5 can_mg.hdf5")
+    p.add_argument("--tasks",     type=str, default=None, nargs="+",
+                   help="Task name(s) matching each --data path (e.g. can can can).\n"
+                        "If omitted with a single dataset, uses cfg.dataset.task.\n"
+                        "If omitted with multiple datasets, inferred from filename prefix.")
     p.add_argument("--img_size",  type=int, default=None)
     p.add_argument("--encoder",   type=str, default=None,
                    choices=["resnet18", "resnet50", "small_cnn"])
@@ -87,7 +102,8 @@ def main():
     cfg = OmegaConf.load(args.config)
 
     # CLI overrides
-    if args.data:       cfg.dataset.path = args.data
+    if args.data and len(args.data) == 1:
+        cfg.dataset.path = args.data[0]
     if args.img_size:   cfg.dataset.img_size = args.img_size
     if args.encoder:    cfg.model.encoder_type = args.encoder
     # --end_epoch takes priority; --epochs is the legacy alias
@@ -107,18 +123,57 @@ def main():
     np.random.seed(args.seed)
 
     # ── Dataset ────────────────────────────────────────────────────────
-    print(f"\n[Dataset] Loading {cfg.dataset.path} …")
-    train_loader, val_loader, dataset = load_robomimic_dataset(
-        hdf5_path=cfg.dataset.path,
-        task_name=cfg.dataset.task,
-        obs_horizon=cfg.dataset.obs_horizon,
-        action_horizon=cfg.dataset.action_horizon,
-        img_size=cfg.dataset.img_size,
-        batch_size=cfg.training.batch_size,
-        num_workers=cfg.training.num_workers,
-        max_demos=cfg.dataset.max_demos,
-        seed=args.seed,
-    )
+    multi_paths = args.data if (args.data and len(args.data) > 1) else None
+
+    if multi_paths:
+        # ── Multi-dataset mode ─────────────────────────────────────── #
+        # Infer task names: use --tasks if given, else parse filename prefix
+        KNOWN_TASKS = {"lift", "can", "square", "transport", "tool_hang"}
+        if args.tasks:
+            task_names = args.tasks
+            if len(task_names) != len(multi_paths):
+                raise ValueError(
+                    f"--tasks ({len(task_names)}) must match --data ({len(multi_paths)})"
+                )
+        else:
+            task_names = []
+            for p in multi_paths:
+                stem = Path(p).stem           # e.g. "can_ph_84px"
+                prefix = stem.split("_")[0]   # e.g. "can"
+                if prefix not in KNOWN_TASKS:
+                    raise ValueError(
+                        f"Cannot infer task from filename '{p}'. "
+                        f"Use --tasks to specify explicitly."
+                    )
+                task_names.append(prefix)
+
+        dataset_list = [{"path": p, "task": t}
+                        for p, t in zip(multi_paths, task_names)]
+        print(f"\n[Dataset] Multi-dataset mode: {[d['path'] for d in dataset_list]}")
+        train_loader, val_loader, dataset = load_multi_robomimic_dataset(
+            datasets=dataset_list,
+            obs_horizon=cfg.dataset.obs_horizon,
+            action_horizon=cfg.dataset.action_horizon,
+            img_size=cfg.dataset.img_size,
+            batch_size=cfg.training.batch_size,
+            num_workers=cfg.training.num_workers,
+            max_demos=cfg.dataset.max_demos,
+            seed=args.seed,
+        )
+    else:
+        # ── Single-dataset mode (original behaviour) ───────────────── #
+        print(f"\n[Dataset] Loading {cfg.dataset.path} …")
+        train_loader, val_loader, dataset = load_robomimic_dataset(
+            hdf5_path=cfg.dataset.path,
+            task_name=cfg.dataset.task,
+            obs_horizon=cfg.dataset.obs_horizon,
+            action_horizon=cfg.dataset.action_horizon,
+            img_size=cfg.dataset.img_size,
+            batch_size=cfg.training.batch_size,
+            num_workers=cfg.training.num_workers,
+            max_demos=cfg.dataset.max_demos,
+            seed=args.seed,
+        )
 
     state_dim = dataset.state_dim
     act_dim   = dataset.act_dim

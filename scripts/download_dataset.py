@@ -3,10 +3,13 @@
 Download and optionally downsample a Robomimic dataset.
 
 Supported datasets (task × type):
-  Tasks : lift, can, square, transport
+  Tasks : lift, can, square, transport, tool_hang
   Types : ph (proficient-human), mh (mixed-human), mg (machine-generated)
 
-Downloads the HDF5 image file from the official Robomimic hosting.
+  Note: mg is only available for lift and can tasks.
+        tool_hang is only available as ph.
+
+Downloads the HDF5 image file from the official Robomimic HuggingFace hosting.
 
 Usage:
     # Smallest dataset to get started (~300 MB)
@@ -18,6 +21,11 @@ Usage:
 
     # Can task, proficient-human
     python scripts/download_dataset.py --task can --type ph
+
+    # Download all three can variants back-to-back
+    python scripts/download_dataset.py --task can --type ph
+    python scripts/download_dataset.py --task can --type mh
+    python scripts/download_dataset.py --task can --type mg
 """
 import argparse
 import shutil
@@ -29,22 +37,30 @@ import h5py
 import numpy as np
 from tqdm import tqdm
 
-# ── Official Robomimic download URLs ──────────────────────────────────────────
+# ── Official Robomimic download URLs (HuggingFace v1.5) ───────────────────────
 BASE_URL = "http://downloads.cs.stanford.edu/downloads/rt_benchmark"
 DATASET_URLS = {
-    ("lift", "ph"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/lift/ph/demo_v15.hdf5?download=true",
-    ("lift", "mh"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/lift/mh/demo_v15.hdf5?download=true",
-    ("can",  "ph"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/can/ph/demo_v15.hdf5?download=true",
-    ("can",  "mh"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/can/mh/demo_v15.hdf5?download=true",
-    ("square","ph"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/square/ph/demo_v15.hdf5?download=true",
-    ("transport","ph"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/transport/ph/demo_v15.hdf5?download=true",
+    # Proficient-Human (ph)
+    ("lift",      "ph"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/lift/ph/demo_v15.hdf5?download=true",
+    ("can",       "ph"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/can/ph/demo_v15.hdf5?download=true",
+    ("square",    "ph"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/square/ph/demo_v15.hdf5?download=true",
+    ("transport", "ph"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/transport/ph/demo_v15.hdf5?download=true",
+    ("tool_hang", "ph"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/tool_hang/ph/demo_v15.hdf5?download=true",
+    # Mixed-Human (mh)
+    ("lift",      "mh"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/lift/mh/demo_v15.hdf5?download=true",
+    ("can",       "mh"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/can/mh/demo_v15.hdf5?download=true",
+    ("square",    "mh"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/square/mh/demo_v15.hdf5?download=true",
+    ("transport", "mh"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/transport/mh/demo_v15.hdf5?download=true",
+    # Machine-Generated (mg) — only lift & can
+    ("lift",      "mg"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/lift/mg/demo_v15.hdf5?download=true",
+    ("can",       "mg"): "https://huggingface.co/datasets/amandlek/robomimic/resolve/main/v1.5/can/mg/demo_v15.hdf5?download=true",
 }
 
 
 def parse_args():
     p = argparse.ArgumentParser()
     p.add_argument("--task",      type=str, default="lift",
-                   choices=["lift","can","square","transport"])
+                   choices=["lift","can","square","transport","tool_hang"])
     p.add_argument("--type",      type=str, default="ph",
                    choices=["ph","mh","mg"])
     p.add_argument("--output_dir",type=str, default="data/robomimic")
