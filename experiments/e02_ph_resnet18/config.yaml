@@ -1,0 +1,27 @@
+# e02_ph_resnet18
+# ─────────────────────────────────────────────────────────────────────
+# Architecture ablation: swap SmallCNN → ResNet18 (frozen backbone).
+# Encoder : ResNet18, ImageNet pretrained, backbone frozen
+# Data    : can_ph only (same as baseline — isolates encoder effect)
+# Question: How much does a pretrained encoder help alone?
+# Expected: Significant jump vs baseline (Chi et al. get ~76% with ResNet+ph)
+# ─────────────────────────────────────────────────────────────────────
+_base_: ../base_config.yaml
+
+dataset:
+  path: data/robomimic/can_ph_84px.hdf5
+  task: can
+
+model:
+  encoder_type:       resnet18
+  img_emb_dim:        256
+  encoder_frozen:     true
+  encoder_pretrained: true
+  img_fusion:         mean
+  state_emb_dim:      64
+  hidden_dim:         512
+  num_layers:         4
+
+paths:
+  checkpoint_dir: experiments/e02_ph_resnet18/checkpoints
+  log_dir:        experiments/e02_ph_resnet18/logs

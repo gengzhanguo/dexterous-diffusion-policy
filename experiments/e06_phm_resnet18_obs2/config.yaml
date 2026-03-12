@@ -1,0 +1,32 @@
+# e06_phm_resnet18_obs2
+# ─────────────────────────────────────────────────────────────────────
+# Best candidate config: everything good, encoder still frozen.
+# Encoder : ResNet18, frozen
+# Data    : can_ph + can_mh (~500 demos)
+# Obs     : obs_horizon=2, concat fusion
+# Question: Does ph+mh + temporal obs push performance further?
+# ─────────────────────────────────────────────────────────────────────
+_base_: ../base_config.yaml
+
+dataset:
+  paths:
+    - data/robomimic/can_ph_84px.hdf5
+    - data/robomimic/can_mh_84px.hdf5
+  tasks:
+    - can
+    - can
+  obs_horizon: 2
+
+model:
+  encoder_type:       resnet18
+  img_emb_dim:        256
+  encoder_frozen:     true
+  encoder_pretrained: true
+  img_fusion:         concat
+  state_emb_dim:      64
+  hidden_dim:         512
+  num_layers:         4
+
+paths:
+  checkpoint_dir: experiments/e06_phm_resnet18_obs2/checkpoints
+  log_dir:        experiments/e06_phm_resnet18_obs2/logs

@@ -1,0 +1,31 @@
+# e03_phm_resnet18
+# ─────────────────────────────────────────────────────────────────────
+# Best of both: ResNet18 (frozen) + can_ph + can_mh.
+# Encoder : ResNet18, ImageNet pretrained, backbone frozen
+# Data    : can_ph + can_mh (~500 demos)
+# Question: Combined effect of better arch AND more data?
+# Expected: Strongest result among frozen-encoder experiments
+# ─────────────────────────────────────────────────────────────────────
+_base_: ../base_config.yaml
+
+dataset:
+  paths:
+    - data/robomimic/can_ph_84px.hdf5
+    - data/robomimic/can_mh_84px.hdf5
+  tasks:
+    - can
+    - can
+
+model:
+  encoder_type:       resnet18
+  img_emb_dim:        256
+  encoder_frozen:     true
+  encoder_pretrained: true
+  img_fusion:         mean
+  state_emb_dim:      64
+  hidden_dim:         512
+  num_layers:         4
+
+paths:
+  checkpoint_dir: experiments/e03_phm_resnet18/checkpoints
+  log_dir:        experiments/e03_phm_resnet18/logs

@@ -1,0 +1,24 @@
+# e00_baseline_can_ph
+# ─────────────────────────────────────────────────────────────────────
+# Reproduce the original baseline result.
+# Encoder : SmallCNN (trained from scratch)
+# Data    : can_ph only (~200 demos)
+# Purpose : Reference point — should match ~42% from README
+# ─────────────────────────────────────────────────────────────────────
+_base_: ../base_config.yaml
+
+dataset:
+  path: data/robomimic/can_ph_84px.hdf5
+  task: can
+
+model:
+  encoder_type: small_cnn
+  img_emb_dim:  128
+  img_fusion:   mean
+  state_emb_dim: 32
+  hidden_dim:   256
+  num_layers:   3
+
+paths:
+  checkpoint_dir: experiments/e00_baseline_can_ph/checkpoints
+  log_dir:        experiments/e00_baseline_can_ph/logs

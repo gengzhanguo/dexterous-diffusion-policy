@@ -1,0 +1,28 @@
+# e01_phm_small_cnn
+# ─────────────────────────────────────────────────────────────────────
+# Dataset ablation: add can_mh on top of can_ph.
+# Encoder : SmallCNN (same as baseline — isolates data effect)
+# Data    : can_ph + can_mh (~500 demos combined)
+# Question: Does more mixed-quality data help with a weak encoder?
+# ─────────────────────────────────────────────────────────────────────
+_base_: ../base_config.yaml
+
+dataset:
+  paths:
+    - data/robomimic/can_ph_84px.hdf5
+    - data/robomimic/can_mh_84px.hdf5
+  tasks:
+    - can
+    - can
+
+model:
+  encoder_type: small_cnn
+  img_emb_dim:  128
+  img_fusion:   mean
+  state_emb_dim: 32
+  hidden_dim:   256
+  num_layers:   3
+
+paths:
+  checkpoint_dir: experiments/e01_phm_small_cnn/checkpoints
+  log_dir:        experiments/e01_phm_small_cnn/logs

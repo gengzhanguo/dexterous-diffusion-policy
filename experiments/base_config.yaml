@@ -1,0 +1,60 @@
+# ─────────────────────────────────────────────────────────────────────
+# base_config.yaml  —  shared defaults for all Can experiments
+#
+# Experiment configs inherit from this via:
+#   _base_: ../base_config.yaml
+# then override only the fields they change.
+# ─────────────────────────────────────────────────────────────────────
+
+dataset:
+  # Single-dataset (override in experiment config)
+  path:  data/robomimic/can_ph_84px.hdf5
+  task:  can
+  # Multi-dataset (set paths + tasks in experiment config; leave null here)
+  paths: null
+  tasks: null
+
+  obs_horizon:    1
+  action_horizon: 16
+  img_size:       84
+  max_demos:      null        # null = use all demos
+
+model:
+  encoder_type:       small_cnn   # small_cnn | resnet18 | resnet50
+  img_emb_dim:        128
+  encoder_frozen:     true
+  encoder_pretrained: true
+  img_fusion:         mean        # mean | concat
+  state_emb_dim:      32
+  hidden_dim:         256
+  num_layers:         3
+  time_emb_dim:       128
+  dropout:            0.0
+
+diffusion:
+  num_train_timesteps: 100
+  beta_schedule:       cosine
+  prediction_type:     epsilon
+  clip_sample:         true
+  clip_sample_range:   1.0
+
+training:
+  epochs:          300
+  batch_size:      64
+  lr:              1e-4
+  encoder_lr:      null         # null = same as lr (used only when encoder unfrozen)
+  weight_decay:    1e-6
+  grad_clip:       1.0
+  grad_accumulation: 1
+  amp:             true
+  warmup_steps:    500
+  lr_scheduler:    cosine
+  num_workers:     4
+  log_every:       50
+  checkpoint_every: 50
+  early_stopping_patience: 0
+  overfit_ratio_threshold: 0.0
+
+paths:
+  checkpoint_dir: experiments/PLACEHOLDER/checkpoints
+  log_dir:        experiments/PLACEHOLDER/logs

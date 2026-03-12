@@ -101,6 +101,12 @@ def main():
     args = parse_args()
     cfg = OmegaConf.load(args.config)
 
+    # ── Base config inheritance: if config has _base_, merge on top ────
+    if "_base_" in cfg:
+        base_path = Path(args.config).parent / cfg._base_
+        base_cfg  = OmegaConf.load(base_path)
+        cfg = OmegaConf.merge(base_cfg, cfg)
+
     # CLI overrides
     if args.data and len(args.data) == 1:
         cfg.dataset.path = args.data[0]
@@ -123,17 +129,27 @@ def main():
     np.random.seed(args.seed)
 
     # ── Dataset ────────────────────────────────────────────────────────
-    multi_paths = args.data if (args.data and len(args.data) > 1) else None
+    # Determine multi-dataset mode: CLI takes priority, then config.dataset.paths
+    cfg_paths = OmegaConf.select(cfg, "dataset.paths")   # list or None
+    if args.data and len(args.data) > 1:
+        multi_paths = args.data
+        multi_tasks = args.tasks   # may be None (will auto-infer below)
+    elif cfg_paths and len(cfg_paths) > 1:
+        multi_paths = list(cfg_paths)
+        multi_tasks = list(OmegaConf.select(cfg, "dataset.tasks") or [])
+    else:
+        multi_paths = None
+        multi_tasks = None
 
     if multi_paths:
         # ── Multi-dataset mode ─────────────────────────────────────── #
-        # Infer task names: use --tasks if given, else parse filename prefix
+        # Infer task names: use --tasks / cfg.tasks if given, else parse filename prefix
         KNOWN_TASKS = {"lift", "can", "square", "transport", "tool_hang"}
-        if args.tasks:
-            task_names = args.tasks
+        if multi_tasks:
+            task_names = list(multi_tasks)
             if len(task_names) != len(multi_paths):
                 raise ValueError(
-                    f"--tasks ({len(task_names)}) must match --data ({len(multi_paths)})"
+                    f"tasks ({len(task_names)}) must match paths ({len(multi_paths)})"
                 )
         else:
             task_names = []

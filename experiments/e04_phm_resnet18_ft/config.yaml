@@ -1,0 +1,36 @@
+# e04_phm_resnet18_ft
+# ─────────────────────────────────────────────────────────────────────
+# Fine-tune the ResNet18 backbone end-to-end.
+# Encoder : ResNet18, backbone UNFROZEN (full fine-tune)
+# Data    : can_ph + can_mh (~500 demos)
+# Question: Does fine-tuning the backbone help vs frozen (e03)?
+# Note    : Uses lower LR for encoder (1e-5) to avoid destroying ImageNet features
+#           Higher VRAM usage. If OOM, reduce batch_size to 32.
+# ─────────────────────────────────────────────────────────────────────
+_base_: ../base_config.yaml
+
+dataset:
+  paths:
+    - data/robomimic/can_ph_84px.hdf5
+    - data/robomimic/can_mh_84px.hdf5
+  tasks:
+    - can
+    - can
+
+model:
+  encoder_type:       resnet18
+  img_emb_dim:        256
+  encoder_frozen:     false         # ← fine-tune backbone
+  encoder_pretrained: true
+  img_fusion:         mean
+  state_emb_dim:      64
+  hidden_dim:         512
+  num_layers:         4
+
+training:
+  lr:         1e-4
+  encoder_lr: 1e-5                  # ← 10x lower LR for backbone
+
+paths:
+  checkpoint_dir: experiments/e04_phm_resnet18_ft/checkpoints
+  log_dir:        experiments/e04_phm_resnet18_ft/logs

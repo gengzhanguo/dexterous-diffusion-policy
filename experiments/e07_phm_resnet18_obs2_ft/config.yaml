@@ -1,0 +1,37 @@
+# e07_phm_resnet18_obs2_ft
+# ─────────────────────────────────────────────────────────────────────
+# Full kitchen sink: everything tuned.
+# Encoder : ResNet18, backbone UNFROZEN
+# Data    : can_ph + can_mh (~500 demos)
+# Obs     : obs_horizon=2, concat fusion
+# Question: Does fine-tuning the backbone help when we have more data
+#           AND temporal context? High VRAM — reduce batch_size if OOM.
+# ─────────────────────────────────────────────────────────────────────
+_base_: ../base_config.yaml
+
+dataset:
+  paths:
+    - data/robomimic/can_ph_84px.hdf5
+    - data/robomimic/can_mh_84px.hdf5
+  tasks:
+    - can
+    - can
+  obs_horizon: 2
+
+model:
+  encoder_type:       resnet18
+  img_emb_dim:        256
+  encoder_frozen:     false
+  encoder_pretrained: true
+  img_fusion:         concat
+  state_emb_dim:      64
+  hidden_dim:         512
+  num_layers:         4
+
+training:
+  lr:         1e-4
+  encoder_lr: 1e-5
+
+paths:
+  checkpoint_dir: experiments/e07_phm_resnet18_obs2_ft/checkpoints
+  log_dir:        experiments/e07_phm_resnet18_obs2_ft/logs

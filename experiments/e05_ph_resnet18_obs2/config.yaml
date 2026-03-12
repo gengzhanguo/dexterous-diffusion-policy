@@ -1,0 +1,29 @@
+# e05_ph_resnet18_obs2
+# ─────────────────────────────────────────────────────────────────────
+# Temporal obs with a strong encoder.
+# Encoder : ResNet18, frozen
+# Data    : can_ph only
+# Obs     : obs_horizon=2, concat fusion (2 frames stacked)
+# Question: Does temporal obs matter more with a richer encoder?
+#           (baseline temporal_obs used SmallCNN and got 40% — barely worse)
+# ─────────────────────────────────────────────────────────────────────
+_base_: ../base_config.yaml
+
+dataset:
+  path: data/robomimic/can_ph_84px.hdf5
+  task: can
+  obs_horizon: 2                    # ← two consecutive frames
+
+model:
+  encoder_type:       resnet18
+  img_emb_dim:        256
+  encoder_frozen:     true
+  encoder_pretrained: true
+  img_fusion:         concat        # ← concat: obs_emb_dim = 256*2 + state_emb
+  state_emb_dim:      64
+  hidden_dim:         512
+  num_layers:         4
+
+paths:
+  checkpoint_dir: experiments/e05_ph_resnet18_obs2/checkpoints
+  log_dir:        experiments/e05_ph_resnet18_obs2/logs
