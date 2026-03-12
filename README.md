@@ -43,6 +43,8 @@ Evaluated with 50 rollouts, DDIM 20 steps, max 400 steps per episode.
 
 ## Architecture
 
+![Architecture](models/architecture.jpg)
+
 ```
 Image (84×84×3)
     └─ SmallCNN → img_emb (128-d)
