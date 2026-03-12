@@ -1,4 +1,4 @@
-# Dexterous Diffusion Policy v5
+# Dexterous Diffusion Policy
 
 Visual diffusion policy experiments on [robosuite](https://robosuite.ai/) Can manipulation task. Built from scratch to understand how architectural choices affect performance.
 
